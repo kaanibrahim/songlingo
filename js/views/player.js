@@ -41,7 +41,7 @@ export async function renderPlayer(root, songId) {
       <p class="hint">Tap a word to translate it. Drag across several words (or tap one, then shift-tap another) to translate a phrase.</p>
 
       <div id="notices"></div>
-      <div class="lyrics" id="lyrics" aria-live="off"></div>
+      <div class="lyrics notranslate" id="lyrics" translate="no"${song.language ? ` lang="${esc(song.language)}"` : ''} aria-live="off"></div>
       ${song.translation ? `<section class="manual-translation" aria-labelledby="translationTitle">
         <h2 id="translationTitle">${esc(LANGUAGES[song.translationLanguage] || song.translationLanguage || 'Manual translation')}</h2>
         ${translationResult.error

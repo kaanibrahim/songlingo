@@ -6,7 +6,7 @@ It's plain HTML, CSS and JavaScript with no build step and no backend, so it run
 
 ## Features
 
-- **Synced lyrics from the MP3.** Songlingo reads the lyrics embedded in the file, so there are no separate lyrics files to manage. The current line is highlighted and scrolls into view as the song plays, and instrumental breaks show a small animation. Click a line's timestamp to jump to it.
+- **Synced lyrics from the MP3.** Songlingo reads the lyrics embedded in the file, so there are no separate lyrics files to manage. The current line is highlighted and scrolls into view as the song plays, and instrumental breaks show a small animation. Click a line's timestamp to jump to it. Lyrics are marked as not to translate, so browser translation preserves the original words.
 - **Player controls.** Play/pause, ±5 s, seek bar, speed from 0.6× to 1.25×, and loop the current line.
 - **Tap to translate.** Tap a word, or drag across several words (or shift-click) to translate a phrase. Translations use Google Translate's unofficial web endpoint, and you can edit them before saving. Songs can also include a manually supplied translation displayed below the lyrics.
 - **Saved words, grouped by song.** Each saved word keeps the lyric line it came from. Edit, search or delete words. Saved words are underlined in the lyrics.
