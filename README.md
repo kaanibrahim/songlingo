@@ -91,6 +91,7 @@ All paths are relative, so the site works from a repo subfolder URL.
 
 ### Notes
 
+- **Updates.** The site revalidates same-origin files with the network, so browsers check for deployed changes instead of relying on stale cached copies. After deploying this update, open the site once on each device to enable the update check.
 - **File sizes.** GitHub blocks files over 100 MB and warns above 50 MB. A typical MP3 is 3–10 MB, which is fine.
 - **Copyright.** A public GitHub Pages site is visible to anyone. Only publish audio and lyrics you have the rights to share, or keep the repository private. Private-repo Pages needs a paid GitHub plan.
 - **Data storage.** Saved words live in each visitor's browser (`localStorage`). Clearing site data deletes them, so use Settings → Export to back them up or move them to another device.
