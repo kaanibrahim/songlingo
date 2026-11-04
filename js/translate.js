@@ -1,5 +1,4 @@
-// Translation lookup. Uses the free MyMemory API, which allows requests from
-// browsers (CORS) and needs no key — ideal for a static GitHub Pages site.
+// Translation lookup through Google Translate's unofficial web endpoint.
 // Results are cached in memory and localStorage.
 
 export const LANGUAGES = {
@@ -9,7 +8,7 @@ export const LANGUAGES = {
   hi: 'Hindi', el: 'Greek', uk: 'Ukrainian', ro: 'Romanian', cs: 'Czech',
 };
 
-const CACHE_KEY = 'songlingo.tcache.v1';
+const CACHE_KEY = 'songlingo.tcache.v2';
 let cache;
 function loadCache() {
   if (cache) return cache;
@@ -24,15 +23,9 @@ function saveCache() {
   } catch {}
 }
 
-const decode = (s) => {
-  const el = document.createElement('textarea');
-  el.innerHTML = s;
-  return el.value;
-};
-
 /**
  * Translate text. Returns { main, alternatives[] }.
- * Throws if the service can't be reached.
+ * The unofficial endpoint can change or become unavailable without notice.
  */
 export async function translate(text, from, to) {
   const q = text.trim();
@@ -41,7 +34,8 @@ export async function translate(text, from, to) {
   const c = loadCache();
   if (c[key]) return c[key];
 
-  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(q)}&langpair=${from}|${to}`;
+  const params = new URLSearchParams({ client: 'gtx', sl: from, tl: to, dt: 't', q });
+  const url = `https://translate.googleapis.com/translate_a/single?${params}`;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 8000);
   let data;
@@ -52,22 +46,11 @@ export async function translate(text, from, to) {
   } finally {
     clearTimeout(timer);
   }
-  if (data.responseStatus && Number(data.responseStatus) !== 200) {
-    throw new Error(data.responseDetails || 'Translation service error');
-  }
+  const segments = Array.isArray(data?.[0]) ? data[0] : [];
+  const main = segments.map((segment) => typeof segment?.[0] === 'string' ? segment[0] : '').join('').trim();
+  if (!main) throw new Error('Google Translate returned no translation');
 
-  const main = decode(data.responseData?.translatedText || '').trim();
-  const seen = new Set([main.toLowerCase()]);
-  const alternatives = [];
-  for (const m of data.matches || []) {
-    const t = decode(m.translation || '').trim();
-    if (!t || seen.has(t.toLowerCase())) continue;
-    if ((m.segment || '').trim().toLowerCase() !== q.toLowerCase()) continue;
-    seen.add(t.toLowerCase());
-    alternatives.push(t);
-    if (alternatives.length >= 3) break;
-  }
-  const result = { main, alternatives };
+  const result = { main, alternatives: [] };
   if (main) { c[key] = result; saveCache(); }
   return result;
 }
