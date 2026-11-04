@@ -1,4 +1,4 @@
-import { $, $$, esc, toast, getSong, loadLyrics, coverHtml } from '../util.js';
+import { $, $$, esc, toast, getSong, loadLyrics, loadTranslation, coverHtml } from '../util.js';
 import { tokenize, activeLineIndex, formatTime } from '../lrc.js';
 import { getSettings, addWord, findWord, getWords, deleteWord, onWordsChange } from '../store.js';
 import { translate, dictionaryLinks, LANGUAGES } from '../translate.js';
@@ -12,7 +12,13 @@ export async function renderPlayer(root, songId) {
     root.innerHTML = `<section class="empty"><h2>Song not found</h2><p><a href="#/">Back to songs</a></p></section>`;
     return;
   }
-  const lyrics = await loadLyrics(song);
+  const [lyrics, translationResult] = await Promise.all([
+    loadLyrics(song),
+    song.translation
+      ? loadTranslation(song).then((text) => ({ text }), (error) => ({ error }))
+      : Promise.resolve({ text: '' }),
+  ]);
+  const translation = translationResult.text || '';
   const lines = lyrics.lines;
   const settings = getSettings();
   const from = song.language || 'auto';
@@ -36,6 +42,12 @@ export async function renderPlayer(root, songId) {
 
       <div id="notices"></div>
       <div class="lyrics" id="lyrics" aria-live="off"></div>
+      ${song.translation ? `<section class="manual-translation" aria-labelledby="translationTitle">
+        <h2 id="translationTitle">${esc(LANGUAGES[song.translationLanguage] || song.translationLanguage || 'Manual translation')}</h2>
+        ${translationResult.error
+          ? `<p class="notice error">${esc(translationResult.error.message)}</p>`
+          : `<div class="manual-translation-text">${esc(translation.trim())}</div>`}
+      </section>` : ''}
 
       <div class="controls" id="controls">
         <button class="ctl" id="backBtn" title="Back 5 seconds (←)" aria-label="Back 5 seconds">−5</button>

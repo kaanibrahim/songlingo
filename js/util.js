@@ -103,6 +103,13 @@ export async function loadLyrics(song) {
   return { lines: [], synced: false, source: 'none' };
 }
 
+export async function loadTranslation(song) {
+  if (!song.translation) return '';
+  const res = await fetch(song.translation, { cache: 'no-cache' });
+  if (!res.ok) throw new Error(`Couldn't load ${song.translation} (HTTP ${res.status})`);
+  return res.text();
+}
+
 /** Deterministic colour pair for a song cover when no image is provided. */
 export function coverStyle(song) {
   let h = 0;

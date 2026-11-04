@@ -8,7 +8,7 @@ It's plain HTML, CSS and JavaScript with no build step and no backend, so it run
 
 - **Synced lyrics from the MP3.** Songlingo reads the lyrics embedded in the file, so there are no separate lyrics files to manage. The current line is highlighted and scrolls into view as the song plays, and instrumental breaks show a small animation. Click a line's timestamp to jump to it.
 - **Player controls.** Play/pause, ±5 s, seek bar, speed from 0.6× to 1.25×, and loop the current line.
-- **Tap to translate.** Tap a word, or drag across several words (or shift-click) to translate a phrase. Translations come from the free MyMemory API, and you can edit them before saving.
+- **Tap to translate.** Tap a word, or drag across several words (or shift-click) to translate a phrase. Translations use Google Translate's unofficial web endpoint, and you can edit them before saving. Songs can also include a manually supplied translation displayed below the lyrics.
 - **Saved words, grouped by song.** Each saved word keeps the lyric line it came from. Edit, search or delete words. Saved words are underlined in the lyrics.
 - **Practice modes.**
   - Flashcards: flip, then sort into "Know it" or "Still learning".
@@ -27,10 +27,11 @@ js/app.js             Router + settings
 js/id3.js             Reads embedded lyrics, title, artist and cover from MP3 tags
 js/store.js           localStorage persistence (saved words, settings)
 js/lrc.js             LRC timestamp parsing, splitting lines into words
-js/translate.js       Translation lookups (MyMemory API) + dictionary links
-js/util.js            Helpers, song + lyrics loading
+js/translate.js       Translation lookups (unofficial Google endpoint) + dictionary links
+js/util.js            Helpers, song + lyrics + translation loading
 js/views/*.js         Library, Player, My words, Practise
 songs/songs.json      Your song list
+songs/*.txt           Optional manual song translations
 audio/                Your .mp3 files (with embedded lyrics)
 ```
 
@@ -51,6 +52,7 @@ audio/                Your .mp3 files (with embedded lyrics)
 
    - `id`: a unique slug that never changes, because saved words are linked to it.
    - `language`: a two-letter code for the song's language (`fr`, `es`, `de`, `tr`, ...). This is the language that gets translated *from*. If you leave it out, the language stored with the embedded lyrics is used.
+   - `translation` (optional): path to a UTF-8 text file containing a manual translation. Separate stanzas with a blank line; it is displayed below the lyrics and is not time-synced. Set `translationLanguage` to its language code (for example, `"en"`).
    - `title` and `artist` are optional. If you leave them out, they're read from the MP3's tags.
    - `cover` (an image path) is optional. Without it, the cover art inside the MP3 is used, or a generated cover if there is none.
 
@@ -92,7 +94,7 @@ All paths are relative, so the site works from a repo subfolder URL.
 - **File sizes.** GitHub blocks files over 100 MB and warns above 50 MB. A typical MP3 is 3–10 MB, which is fine.
 - **Copyright.** A public GitHub Pages site is visible to anyone. Only publish audio and lyrics you have the rights to share, or keep the repository private. Private-repo Pages needs a paid GitHub plan.
 - **Data storage.** Saved words live in each visitor's browser (`localStorage`). Clearing site data deletes them, so use Settings → Export to back them up or move them to another device.
-- **Translations.** MyMemory's free tier allows roughly 5,000 characters per day per IP address, which is plenty for single words. Results are cached in the browser. If the service is unavailable, you can type your own translation or use the Google Translate, Wiktionary or WordReference links in the popup.
+- **Translations.** Tap-to-translate sends selected text to Google Translate's unofficial endpoint; no API key is required, but Google may change or block it without notice. Results are cached in the browser. If unavailable, you can type your own translation or use the Google Translate, Wiktionary or WordReference links in the popup.
 
 ## Keyboard shortcuts
 
