@@ -52,7 +52,7 @@ audio/                Your .mp3 files (with embedded lyrics)
 
    - `id`: a unique slug that never changes, because saved words are linked to it.
    - `language`: a two-letter code for the song's language (`fr`, `es`, `de`, `tr`, ...). This is the language that gets translated *from*. If you leave it out, the language stored with the embedded lyrics is used.
-   - `translation` (optional): path to a UTF-8 text file containing a manual translation. Each non-empty line should translate the corresponding non-empty lyric line in order; blank lines are for display formatting. The translation is displayed below the lyrics and used for tap lookup instead of an online service. Set `translationLanguage` to its language code (for example, `"en"`).
+   - `translation` (optional): path to a UTF-8 text file containing a manual translation. Each non-empty line should translate the corresponding non-empty lyric line in order; blank lines are for display formatting. The translation is displayed below the lyrics. Tapping words or phrases still looks up just the selected text using the online translation service. Set `translationLanguage` to its language code (for example, `"en"`).
    - `title` and `artist` are optional. If you leave them out, they're read from the MP3's tags.
    - `cover` (an image path) is optional. Without it, the cover art inside the MP3 is used, or a generated cover if there is none.
 
