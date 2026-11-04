@@ -9,6 +9,11 @@ import { renderPractice } from './views/practice.js';
 const app = $('#app');
 let cleanup = null;
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+    .catch((error) => console.error('Could not register the update-checking service worker:', error));
+}
+
 // Simple hash router: #/  #/song/<id>  #/words  #/practice[?song=<id>]
 const routes = [
   { re: /^\/?$/, nav: 'library', view: () => renderLibrary(app) },
