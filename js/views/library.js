@@ -4,11 +4,6 @@ import { LANGUAGES } from '../translate.js';
 
 export async function renderLibrary(root) {
   root.innerHTML = `
-    <section class="hero">
-      <p class="eyebrow">Learn languages through songs</p>
-      <h1>Press play. Tap a word.<br><em>Make it yours.</em></h1>
-      <p class="lede">Follow the lyrics as the song plays, tap anything you don't understand, and practise your saved words with flashcards.</p>
-    </section>
     <section>
       <div class="section-head"><h2>Your songs</h2></div>
       <div class="song-grid" id="songGrid"><p class="muted">Loading songs…</p></div>
