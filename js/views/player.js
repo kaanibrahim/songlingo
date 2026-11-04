@@ -23,8 +23,6 @@ export async function renderPlayer(root, songId) {
   const settings = getSettings();
   const from = song.language || 'auto';
   const to = song.translationLanguage || settings.targetLang;
-  const manualLines = translation.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-  const lyricLines = lines.filter((line) => line.text);
 
   root.innerHTML = `
     <section class="player-view">
@@ -319,17 +317,6 @@ export async function renderPlayer(root, songId) {
     positionLookup();
 
     const trEl = $('#lookupTr');
-    if (translation && !translationResult.error) {
-      if (manualLines.length !== lyricLines.length) {
-        trEl.innerHTML = `<p class="muted">This manual translation has ${manualLines.length} non-empty lines, but the lyrics have ${lyricLines.length}. Add one translated line per lyric line to enable tap lookup.</p>`;
-        return;
-      }
-      const lyricIndex = lines.slice(0, sel.line + 1).filter((lyric) => lyric.text).length - 1;
-      const manualTranslation = manualLines[lyricIndex];
-      trEl.innerHTML = `<p class="tr-main">${esc(manualTranslation)}</p><p class="muted">Manual translation of this lyric line</p>`;
-      if (!existing) input.value = manualTranslation;
-      return;
-    }
     if (from === 'auto' || from === to) {
       trEl.innerHTML = `<p class="muted">Set a <code>language</code> for this song in songs.json to get automatic translations.</p>`;
       return;
