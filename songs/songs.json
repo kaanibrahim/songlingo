@@ -7,5 +7,13 @@
     "audio": "audio/formidable.mp3",
     "translation": "songs/formidable.en.txt",
     "translationLanguage": "en"
+  },
+  {
+    "id": "aynali-kemer",
+    "title": "Aynalı Kemer",
+    "language": "tr",
+    "audio": "audio/aynali-kemer.mp3",
+    "translation": "songs/aynali-kemer.en.txt",
+    "translationLanguage": "en"
   }
 ]
