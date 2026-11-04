@@ -6,6 +6,48 @@ import { translate, dictionaryLinks, LANGUAGES } from '../translate.js';
 const ICON_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="26" height="26"><rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor"/></svg>';
 
+const AYNALI_KEMER_PHRASES = [
+  ['sabah yeli', 'morning breeze'],
+  ['ılgıt ılgıt', 'gently'],
+  ['eserken', 'while blowing'],
+  ['seher vakti', 'at dawn'],
+  ['bir güzel', 'a beauty'],
+  ['bir güzele', 'a beauty'],
+  ['vuruldum', 'I fell for'],
+  ['al dudak', 'red lips'],
+  ['al dudakta', 'red lips'],
+  ['inci dişi', 'pearly teeth'],
+  ['bu dünyada', 'in this world'],
+  ['yok bir eşi', 'she has no equal'],
+  ['aynalı kemer', 'mirrored belt'],
+  ['ince bel', 'slender waist'],
+  ['ince bele', 'slender waist'],
+  ['bu can kurban', 'I’d give my life'],
+  ['tatlı dil', 'sweet words'],
+  ['tatlı dile', 'sweet words'],
+  ['mor menekşe', 'purple violet'],
+  ['nergiz', 'daffodil'],
+  ['dizmiş boynuna', 'strung around her neck'],
+  ['kuşluk vakti', 'mid-morning'],
+  ['aldı beni koynuna', 'took me in her arms'],
+  ['cıvıldaşır', 'chirp together'],
+  ['dudu kuşu', 'parrot'],
+  ['sanki', 'as if'],
+  ['bülbülün ötüşü', 'the nightingale’s song'],
+  ['akşam oldu', 'evening came'],
+  ['gün kavuştu', 'the sun set'],
+  ['sessizce', 'quietly'],
+  ['dedi güzel', 'the beauty said'],
+  ['ayrılık vardır bize', 'we must part'],
+  ['uzakta', 'in the distance'],
+  ['bir baykuş öttü', 'an owl hooted'],
+  ['gül bahçemde', 'in my rose garden'],
+  ['diken bitti', 'a thorn grew'],
+].map(([text, translation]) => ({
+  words: text.toLocaleLowerCase('tr').split(/\s+/),
+  translation,
+})).sort((a, b) => b.words.length - a.words.length);
+
 export async function renderPlayer(root, songId) {
   const song = await getSong(songId);
   if (!song) {
@@ -38,7 +80,7 @@ export async function renderPlayer(root, songId) {
         </div>
       </div>
 
-      <p class="hint">Tap a word to translate it. Drag across several words (or tap one, then shift-tap another) to translate a phrase.</p>
+      <p class="hint">Tap a word or phrase to see its translation.</p>
 
       <div id="notices"></div>
       <div class="lyrics notranslate" id="lyrics" translate="no"${song.language ? ` lang="${esc(song.language)}"` : ''} aria-live="off"></div>
@@ -72,7 +114,7 @@ export async function renderPlayer(root, songId) {
       <button class="icon-btn close" id="lookupClose" aria-label="Close">×</button>
       <p class="lookup-src" id="lookupSrc"></p>
       <div class="lookup-tr" id="lookupTr"></div>
-      <label class="field compact">
+      <label class="field compact" id="lookupEdit" hidden>
         <span>Your translation (edit if needed)</span>
         <input type="text" id="lookupInput" autocomplete="off">
       </label>
@@ -98,13 +140,53 @@ export async function renderPlayer(root, songId) {
         <p>You can still play the song. Lyrics are read from the MP3 file itself, and this one has none embedded. Use an MP3 with embedded synced lyrics, or set a <code>"lyrics"</code> .lrc file for this song in <code>songs/songs.json</code>.</p>
       </div>`;
   } else {
+    const renderTokens = (tokens, lineIndex) => {
+      let html = '';
+      for (let i = 0; i < tokens.length;) {
+        const token = tokens[i];
+        if (!token.word) {
+          html += `<span class="sep">${esc(token.text)}</span>`;
+          i++;
+          continue;
+        }
+
+        let match = null;
+        if (song.id === 'aynali-kemer') {
+          for (const phrase of AYNALI_KEMER_PHRASES) {
+            let tokenIndex = i;
+            let matches = true;
+            for (let wordIndex = 0; wordIndex < phrase.words.length; wordIndex++) {
+              if (!tokens[tokenIndex]?.word || tokens[tokenIndex].text.toLocaleLowerCase('tr') !== phrase.words[wordIndex]) {
+                matches = false;
+                break;
+              }
+              if (wordIndex < phrase.words.length - 1) {
+                const separator = tokens[tokenIndex + 1];
+                if (!separator || separator.word || !/^\s+$/.test(separator.text)) {
+                  matches = false;
+                  break;
+                }
+                tokenIndex += 2;
+              }
+            }
+            if (matches) {
+              match = { end: tokenIndex, translation: phrase.translation };
+              break;
+            }
+          }
+        }
+
+        const end = match?.end ?? i;
+        const text = tokens.slice(i, end + 1).map((part) => part.text).join('');
+        html += `<button class="w" type="button" data-l="${lineIndex}"${match ? ` data-translation="${esc(match.translation)}"` : ''}>${esc(text)}</button>`;
+        i = end + 1;
+      }
+      return html;
+    };
+
     lyricsEl.innerHTML = '<div class="lyrics-pad"></div>' + lines.map((l, li) => {
       if (!l.text) return `<div class="line gap" data-l="${li}" aria-hidden="true"><span class="gap-dots"><i></i><i></i><i></i></span></div>`;
-      const tokens = tokenize(l.text);
-      let wi = 0;
-      const html = tokens.length
-        ? tokens.map((t) => t.word ? `<span class="w" data-l="${li}" data-i="${wi++}">${esc(t.text)}</span>` : `<span class="sep">${esc(t.text)}</span>`).join('')
-        : '';
+      const html = renderTokens(tokenize(l.text), li);
       return `<div class="line" data-l="${li}">
         <button class="line-seek" data-l="${li}" title="Play from here" aria-label="Play from ${formatTime(l.time, false)}">${formatTime(l.time, false)}</button>
         <p class="line-text">${html}</p>
@@ -119,23 +201,9 @@ export async function renderPlayer(root, songId) {
   const lineEls = $$('.line', lyricsEl);
 
   function markSaved() {
-    const saved = getWords().filter((w) => w.songId === song.id).map((w) => w.text.toLocaleLowerCase());
-    const savedSet = new Set(saved);
-    $$('.w', lyricsEl).forEach((el) => el.classList.toggle('saved', savedSet.has(el.textContent.toLocaleLowerCase())));
-    // Mark multi-word phrases too
-    lineEls.forEach((lineEl) => {
-      const ws = $$('.w', lineEl);
-      const txt = ws.map((w) => w.textContent.toLocaleLowerCase());
-      for (const phrase of saved) {
-        const parts = phrase.split(/\s+/);
-        if (parts.length < 2) continue;
-        for (let i = 0; i + parts.length <= txt.length; i++) {
-          if (parts.every((p, k) => txt[i + k].replace(/[^\p{L}\p{N}'’-]/gu, '') === p.replace(/[^\p{L}\p{N}'’-]/gu, ''))) {
-            for (let k = 0; k < parts.length; k++) ws[i + k].classList.add('saved');
-          }
-        }
-      }
-    });
+    const saved = getWords().filter((w) => w.songId === song.id);
+    const savedSet = new Set(saved.map((w) => w.text.toLocaleLowerCase(song.language || undefined)));
+    $$('.w', lyricsEl).forEach((el) => el.classList.toggle('saved', savedSet.has(el.textContent.toLocaleLowerCase(song.language || undefined))));
     const n = saved.length;
     $('#songWordCount').textContent = n ? `(${n})` : '';
   }
@@ -232,91 +300,47 @@ export async function renderPlayer(root, songId) {
     if (audio.paused) togglePlay();
   });
 
-  // ---------- Word / phrase selection ----------
-  let sel = null;       // { line, a, b }
-  let anchor = null;    // { line, i } for shift-click
-  let dragging = false;
+  // ---------- Word / phrase lookup ----------
+  let sel = null;       // { line, text, translation, element }
   let wasPlaying = false;
-
-  const wordsOf = (li) => $$(`.w[data-l="${li}"]`, lyricsEl);
-
-  function paintSelection() {
-    $$('.w.sel', lyricsEl).forEach((el) => el.classList.remove('sel'));
-    if (!sel) return;
-    const ws = wordsOf(sel.line);
-    const lo = Math.min(sel.a, sel.b), hi = Math.max(sel.a, sel.b);
-    for (let i = lo; i <= hi; i++) ws[i]?.classList.add('sel');
-  }
-
-  function selectedText() {
-    if (!sel) return '';
-    const lineText = lines[sel.line].text;
-    const ws = wordsOf(sel.line);
-    const lo = Math.min(sel.a, sel.b), hi = Math.max(sel.a, sel.b);
-    // Slice the original line so punctuation/apostrophes between words are kept
-    const tokens = tokenize(lineText);
-    let wi = -1, out = '', on = false;
-    for (const t of tokens) {
-      if (t.word) wi++;
-      if (t.word && wi === lo) on = true;
-      if (on) out += t.text;
-      if (t.word && wi === hi) break;
-    }
-    return out.trim() || ws.slice(lo, hi + 1).map((w) => w.textContent).join(' ');
-  }
-
-  lyricsEl.addEventListener('pointerdown', (e) => {
-    const w = e.target.closest('.w');
-    if (!w) return;
-    e.preventDefault();
-    const li = +w.dataset.l, i = +w.dataset.i;
-    if (e.shiftKey && anchor && anchor.line === li) {
-      sel = { line: li, a: anchor.i, b: i };
-    } else {
-      sel = { line: li, a: i, b: i };
-      anchor = { line: li, i };
-    }
-    dragging = true;
-    paintSelection();
-  });
-
-  window.addEventListener('pointermove', onPointerMove);
-  function onPointerMove(e) {
-    if (!dragging || !sel) return;
-    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest?.('.w');
-    if (el && +el.dataset.l === sel.line && +el.dataset.i !== sel.b) {
-      sel.b = +el.dataset.i;
-      paintSelection();
-    }
-  }
-  window.addEventListener('pointerup', onPointerUp);
-  function onPointerUp() {
-    if (!dragging) return;
-    dragging = false;
-    if (sel) openLookup();
-  }
 
   // ---------- Lookup popup ----------
   let lookupReq = 0;
-  async function openLookup() {
-    const text = selectedText();
+  async function openLookup(element) {
+    const text = element.textContent.trim();
     if (!text) return;
-    const line = lines[sel.line];
     const reqId = ++lookupReq;
+    sel = {
+      line: +element.dataset.l,
+      text,
+      translation: element.dataset.translation || '',
+      element,
+    };
 
     if (getSettings().autoPause && !audio.paused) { wasPlaying = true; audio.pause(); }
 
     $('#lookupSrc').textContent = text;
-    $('#lookupLinks').innerHTML = 'More: ' + dictionaryLinks(text, from, to).map((l) => `<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join(' · ');
-    const input = $('#lookupInput');
     const existing = findWord(song.id, text);
     $('#unsaveBtn').hidden = !existing;
     $('#saveBtn').textContent = existing ? 'Update' : 'Save word';
-    input.value = existing?.translation || '';
     lookup.hidden = false;
     positionLookup();
 
     const trEl = $('#lookupTr');
+    const input = $('#lookupInput');
+    const edit = $('#lookupEdit');
+    const links = $('#lookupLinks');
+    const knownTranslation = existing?.translation || sel.translation;
+    if (knownTranslation) {
+      edit.hidden = true;
+      links.hidden = true;
+      trEl.innerHTML = `<p class="tr-main">${esc(knownTranslation)}</p>`;
+      return;
+    }
+    edit.hidden = false;
+    links.hidden = false;
+    input.value = existing?.translation || '';
+    links.innerHTML = 'More: ' + dictionaryLinks(text, from, to).map((l) => `<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join(' · ');
     if (from === 'auto' || from === to) {
       trEl.innerHTML = `<p class="muted">Set a <code>language</code> for this song in songs.json to get automatic translations.</p>`;
       return;
@@ -337,32 +361,40 @@ export async function renderPlayer(root, songId) {
 
   function positionLookup() {
     if (window.matchMedia('(max-width: 640px)').matches) { lookup.style.left = lookup.style.top = ''; return; }
-    const ws = $$('.w.sel', lyricsEl);
-    if (!ws.length) return;
-    const r1 = ws[0].getBoundingClientRect();
-    const r2 = ws[ws.length - 1].getBoundingClientRect();
+    if (!sel?.element) return;
+    const rect = sel.element.getBoundingClientRect();
     const box = lookup.getBoundingClientRect();
-    let left = (r1.left + r2.right) / 2 - box.width / 2;
+    let left = rect.left + rect.width / 2 - box.width / 2;
     left = Math.max(12, Math.min(left, window.innerWidth - box.width - 12));
-    let top = r2.bottom + 10;
-    if (top + box.height > window.innerHeight - 100) top = r1.top - box.height - 10;
+    let top = rect.bottom + 10;
+    if (top + box.height > window.innerHeight - 100) top = rect.top - box.height - 10;
     lookup.style.left = `${left}px`;
     lookup.style.top = `${Math.max(12, top)}px`;
   }
 
   function closeLookup() {
     lookup.hidden = true;
+    lookupReq++;
+    sel?.element.classList.remove('sel');
     sel = null;
-    paintSelection();
     if (wasPlaying) { wasPlaying = false; audio.play().catch(() => {}); }
   }
 
+  lyricsEl.addEventListener('click', (e) => {
+    const word = e.target.closest('.w');
+    if (!word) return;
+    $$('.w.sel', lyricsEl).forEach((el) => el.classList.remove('sel'));
+    word.classList.add('sel');
+    openLookup(word);
+  });
+
   $('#lookupClose').addEventListener('click', closeLookup);
   $('#saveBtn').addEventListener('click', () => {
-    const text = $('#lookupSrc').textContent;
-    const translation = $('#lookupInput').value.trim();
-    if (!translation) { toast('Add a translation first'); $('#lookupInput').focus(); return; }
-    const line = lines[sel?.line ?? 0];
+    if (!sel) return;
+    const { text, line: lineIndex, translation: knownTranslation } = sel;
+    const translation = findWord(song.id, text)?.translation || knownTranslation || $('#lookupInput').value.trim() || $('#lookupTr .tr-main')?.textContent?.trim();
+    if (!translation) { toast('Translation not available'); return; }
+    const line = lines[lineIndex];
     const existed = !!findWord(song.id, text);
     addWord({
       songId: song.id, text, translation, from, to,
@@ -373,7 +405,7 @@ export async function renderPlayer(root, songId) {
     closeLookup();
   });
   $('#unsaveBtn').addEventListener('click', () => {
-    const w = findWord(song.id, $('#lookupSrc').textContent);
+    const w = sel && findWord(song.id, sel.text);
     if (w) deleteWord(w.id);
     toast('Removed');
     closeLookup();
@@ -428,8 +460,6 @@ export async function renderPlayer(root, songId) {
     document.body.classList.remove('is-playing');
     document.removeEventListener('keydown', onKey);
     document.removeEventListener('pointerdown', onDocDown);
-    window.removeEventListener('pointermove', onPointerMove);
-    window.removeEventListener('pointerup', onPointerUp);
     window.removeEventListener('resize', positionLookup);
   };
 }
