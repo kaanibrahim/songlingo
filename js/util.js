@@ -38,6 +38,22 @@ export function loadSongs() {
   return songsPromise;
 }
 
+let translationOverridesPromise;
+export function loadTranslationOverrides() {
+  if (!translationOverridesPromise) {
+    translationOverridesPromise = fetch('songs/translation-overrides.json', { cache: 'no-cache' })
+      .then((r) => { if (!r.ok) throw new Error(`Couldn't load songs/translation-overrides.json (HTTP ${r.status})`); return r.json(); })
+      .then((data) => {
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+          throw new Error('songs/translation-overrides.json must contain a JSON object');
+        }
+        return data;
+      })
+      .catch((error) => { translationOverridesPromise = null; throw error; });
+  }
+  return translationOverridesPromise;
+}
+
 export async function getSong(id) {
   const songs = await loadSongs();
   const song = songs.find((s) => s.id === id);

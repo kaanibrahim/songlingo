@@ -40,6 +40,16 @@
         <input type="checkbox" id="autoPause">
         <span>Pause the song while I look up a word</span>
       </label>
+      <label class="check">
+        <input type="checkbox" id="adminMode">
+        <span>Enable translation admin mode</span>
+      </label>
+      <p class="hint">This local toggle reveals translation editing controls; it is not an access-control feature.</p>
+      <div class="field" id="translationExportField" hidden>
+        <span>Save edited translations to the base file</span>
+        <button type="button" class="btn ghost" id="exportTranslationsBtn">Save translation file</button>
+        <p class="hint">Choose <code>songs/translation-overrides.json</code> to update the project file when supported. Otherwise, download it and replace the file manually.</p>
+      </div>
       <div class="field">
         <span>Backup your saved words</span>
         <div class="row">

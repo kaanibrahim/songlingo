@@ -1,6 +1,6 @@
-import { $, $$, esc, toast, getSong, loadLyrics, coverHtml } from '../util.js';
+import { $, $$, esc, toast, getSong, loadLyrics, loadTranslationOverrides, coverHtml } from '../util.js';
 import { tokenize, activeLineIndex, formatTime } from '../lrc.js';
-import { getSettings, addWord, findWord, getWords, deleteWord, onWordsChange } from '../store.js';
+import { getSettings, getTranslationOverrides, setTranslationOverride, addWord, findWord, getWords, updateWord, deleteWord, onWordsChange } from '../store.js';
 import { LANGUAGES } from '../languages.js';
 
 const ICON_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>';
@@ -261,7 +261,7 @@ const BOMBABOMBA_PHRASES = [
   translation,
 })).sort((a, b) => b.words.length - a.words.length);
 
-function findPhrase(tokens, start, phrases) {
+function findPhrase(tokens, start, phrases, overrides) {
   for (const phrase of phrases) {
     let tokenIndex = start;
     let matches = true;
@@ -279,7 +279,10 @@ function findPhrase(tokens, start, phrases) {
         tokenIndex += 2;
       }
     }
-    if (matches) return { end: tokenIndex, translation: phrase.translation };
+    if (matches) {
+      const key = phrase.words.join(' ');
+      return { end: tokenIndex, translation: Object.hasOwn(overrides, key) ? overrides[key] : phrase.translation };
+    }
   }
   return null;
 }
@@ -290,9 +293,13 @@ export async function renderPlayer(root, songId) {
     root.innerHTML = `<section class="empty"><h2>Song not found</h2><p><a href="#/">Back to songs</a></p></section>`;
     return;
   }
-  const lyrics = await loadLyrics(song);
+  const [lyrics, baseOverrides] = await Promise.all([loadLyrics(song), loadTranslationOverrides()]);
   const lines = lyrics.lines;
   const settings = getSettings();
+  const phraseOverrides = {
+    ...(baseOverrides[song.id] || {}),
+    ...(getTranslationOverrides()[song.id] || {}),
+  };
   const from = song.language || '';
   const to = song.translationLanguage || 'en';
 
@@ -338,6 +345,13 @@ export async function renderPlayer(root, songId) {
       <button class="icon-btn close" id="lookupClose" aria-label="Close">×</button>
       <p class="lookup-src" id="lookupSrc"></p>
       <div class="lookup-tr" id="lookupTr"></div>
+      <div class="translation-editor" id="translationEditor" hidden>
+        <label class="field">
+          <span>Edit translation</span>
+          <input type="text" id="translationEdit" autocomplete="off">
+        </label>
+        <button type="button" class="btn small" id="saveTranslationBtn">Save translation</button>
+      </div>
       <div class="row">
         <button class="btn" id="saveBtn">Save word</button>
         <button class="btn ghost" id="replayBtn" title="Replay this line">▶ Line</button>
@@ -373,11 +387,14 @@ export async function renderPlayer(root, songId) {
           continue;
         }
 
-        const match = findPhrase(tokens, i, phrases);
+        const match = findPhrase(tokens, i, phrases, phraseOverrides);
+        const tokenKey = token.text.trim().toLocaleLowerCase('tr');
+        const translation = match?.translation
+          ?? (Object.hasOwn(phraseOverrides, tokenKey) ? phraseOverrides[tokenKey] : undefined);
 
         const end = match?.end ?? i;
         const text = tokens.slice(i, end + 1).map((part) => part.text).join('');
-        html += `<button class="w" type="button" data-l="${lineIndex}"${match ? ` data-translation="${esc(match.translation)}"` : ''}>${esc(text)}</button>`;
+        html += `<button class="w" type="button" data-l="${lineIndex}"${translation !== undefined ? ` data-translation="${esc(translation)}"` : ''}>${esc(text)}</button>`;
         i = end + 1;
       }
       return html;
@@ -520,6 +537,8 @@ export async function renderPlayer(root, songId) {
     const existing = findWord(song.id, text);
     $('#unsaveBtn').hidden = !existing;
     $('#saveBtn').textContent = existing ? 'Update' : 'Save word';
+    $('#translationEditor').hidden = !getSettings().adminMode;
+    $('#translationEdit').value = existing?.translation || sel.translation;
     lookup.hidden = false;
     positionLookup();
 
@@ -570,6 +589,18 @@ export async function renderPlayer(root, songId) {
     });
     toast(existed ? 'Updated' : `Saved “${text}”`);
     closeLookup();
+  });
+  $('#saveTranslationBtn').addEventListener('click', () => {
+    if (!sel) return;
+    const translation = $('#translationEdit').value.trim();
+    setTranslationOverride(song.id, sel.text, translation);
+    phraseOverrides[sel.text.trim().toLocaleLowerCase('tr')] = translation;
+    sel.translation = translation;
+    sel.element.dataset.translation = translation;
+    const existing = findWord(song.id, sel.text);
+    if (existing) updateWord(existing.id, { translation });
+    $('#lookupTr').innerHTML = `<p class="tr-main">${esc(translation || sel.text)}</p>`;
+    toast('Translation updated');
   });
   $('#unsaveBtn').addEventListener('click', () => {
     const w = sel && findWord(song.id, sel.text);
