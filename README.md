@@ -10,6 +10,7 @@ It's plain HTML, CSS and JavaScript with no build step and no backend, so it run
 - **Player controls.** Play/pause, previous/next lyric line, seek bar, speed from 0.6× to 1.25×, and loop the current line.
 - **Supplied translations.** Songs can include a manually supplied translation displayed below the lyrics, and individual words or phrases can have built-in translations. Words without a supplied translation keep their original text.
 - **Saved words, grouped by song.** Each saved word keeps the lyric line it came from. Search or delete words. Saved words are underlined in the lyrics.
+- **Song library views.** Switch between cover-art cards and a compact text list from the button beside “Your songs”; the selected view is remembered in your browser.
 - **Practice modes.**
   - Flashcards: flip, then sort into "Know it" or "Still learning".
   - Multiple choice.
