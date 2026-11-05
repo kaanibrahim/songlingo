@@ -17,6 +17,7 @@ It's plain HTML, CSS and JavaScript with no build step and no backend, so it run
 
   You can practise in either direction or mixed, weakest words first. A "Hear it in the song" button plays the line the word came from. Each word gets a mastery score from 0 to 5.
 - **Backup.** Export or import your saved words as JSON (⚙ Settings).
+- **Translation editing.** Enable admin mode in Settings, tap a lyric word or phrase, and save an edited translation. Changes are kept in your browser until you save the translation file.
 
 ## Project structure
 
@@ -30,6 +31,7 @@ js/lrc.js             LRC timestamp parsing, splitting lines into words
 js/util.js            Helpers, song + lyrics + translation loading
 js/views/*.js         Library, Player, My words, Practise
 songs/songs.json      Your song list
+songs/translation-overrides.json
 songs/*.txt           Optional manual song translations
 audio/                Your .mp3 files (with embedded lyrics)
 ```
@@ -94,6 +96,7 @@ All paths are relative, so the site works from a repo subfolder URL.
 - **File sizes.** GitHub blocks files over 100 MB and warns above 50 MB. A typical MP3 is 3–10 MB, which is fine.
 - **Copyright.** A public GitHub Pages site is visible to anyone. Only publish audio and lyrics you have the rights to share, or keep the repository private. Private-repo Pages needs a paid GitHub plan.
 - **Data storage.** Saved words live in each visitor's browser (`localStorage`). Clearing site data deletes them, so use Settings → Export to back them up or move them to another device.
+- **Translation edits.** Admin mode edits the built-in word and phrase translations. Edits are stored in the browser until you use **Save translation file** in Settings. On browsers with the File System Access API, choose `songs/translation-overrides.json` to write the project file; otherwise the app downloads a JSON file for you to place there. A static GitHub Pages site cannot update the repository or deployed files directly. The admin toggle only controls the editing UI and is not security protection.
 - **Translations.** Translations are supplied with each song or built into the app; the app does not send selected lyrics to an online translation service.
 
 ## Keyboard shortcuts

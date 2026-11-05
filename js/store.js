@@ -4,9 +4,10 @@
 const KEYS = {
   words: 'songlingo.words.v1',
   settings: 'songlingo.settings.v1',
+  translations: 'songlingo.translations.v1',
 };
 
-const DEFAULT_SETTINGS = { autoPause: true };
+const DEFAULT_SETTINGS = { autoPause: true, adminMode: false };
 
 function read(key, fallback) {
   try {
@@ -35,6 +36,22 @@ export function getSettings() {
 }
 export function setSettings(patch) {
   write(KEYS.settings, { ...getSettings(), ...patch });
+}
+
+// ---------- Translation overrides ----------
+const normaliseTranslationKey = (text) => text.trim().toLocaleLowerCase('tr');
+
+export function getTranslationOverrides() {
+  const overrides = read(KEYS.translations, {});
+  return overrides && typeof overrides === 'object' && !Array.isArray(overrides) ? overrides : {};
+}
+
+export function setTranslationOverride(songId, text, translation) {
+  const overrides = getTranslationOverrides();
+  const current = overrides[songId];
+  const songOverrides = current && typeof current === 'object' && !Array.isArray(current) ? current : {};
+  songOverrides[normaliseTranslationKey(text)] = translation;
+  write(KEYS.translations, { ...overrides, [songId]: songOverrides });
 }
 
 // ---------- Saved words ----------
