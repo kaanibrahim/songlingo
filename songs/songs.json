@@ -7,5 +7,14 @@
     "audio": "audio/aynali-kemer.mp3",
     "translation": "songs/aynali-kemer.en.txt",
     "translationLanguage": "en"
+  },
+  {
+    "id": "deli-oglan",
+    "title": "Deli Oğlan",
+    "artist": "Hadise",
+    "language": "tr",
+    "audio": "audio/deli-oglan.mp3",
+    "translation": "songs/deli-oglan.en.txt",
+    "translationLanguage": "en"
   }
 ]
