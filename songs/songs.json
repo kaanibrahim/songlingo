@@ -16,5 +16,13 @@
     "audio": "audio/deli-oglan.mp3",
     "translation": "songs/deli-oglan.en.txt",
     "translationLanguage": "en"
+  },
+  {
+    "id": "bombabomba",
+    "title": "Bombabomba.com",
+    "artist": "İsmail YK",
+    "language": "tr",
+    "audio": "audio/bombabomba.mp3",
+    "lyrics": "songs/bombabomba.lrc"
   }
 ]
