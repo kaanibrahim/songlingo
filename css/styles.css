@@ -190,7 +190,7 @@ textarea { resize: vertical; font-family: var(--serif); font-size: 1rem; line-he
 .line-seek:hover { color: var(--accent-ink); }
 .line-seek:hover::before { content: '▶ '; }
 .line-text {
-  margin: 0; font-family: var(--serif); font-weight: 600;
+  flex: 1; margin: 0; font-family: var(--serif); font-weight: 600; text-align: left;
   font-size: clamp(1.35rem, 3.2vw, 2rem); line-height: 1.3; transition: transform .3s;
   transform-origin: left center;
 }
