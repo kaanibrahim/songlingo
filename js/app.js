@@ -1,6 +1,5 @@
 import { $, $$, toast } from './util.js';
 import { getSettings, setSettings, getWords, onWordsChange, exportWords, importWords } from './store.js';
-import { LANGUAGES } from './translate.js';
 import { renderLibrary } from './views/library.js';
 import { renderPlayer } from './views/player.js';
 import { renderWords } from './views/words.js';
@@ -49,16 +48,12 @@ function updateBadge() {
 // ---------- Settings dialog ----------
 function setupSettings() {
   const dlg = $('#settingsDialog');
-  const sel = $('#targetLang');
-  sel.innerHTML = Object.entries(LANGUAGES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
 
   $('#settingsBtn').addEventListener('click', () => {
     const s = getSettings();
-    sel.value = s.targetLang;
     $('#autoPause').checked = s.autoPause;
     dlg.showModal();
   });
-  sel.addEventListener('change', () => setSettings({ targetLang: sel.value }));
   $('#autoPause').addEventListener('change', (e) => setSettings({ autoPause: e.target.checked }));
 
   $('#exportBtn').addEventListener('click', () => {

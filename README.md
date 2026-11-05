@@ -1,6 +1,6 @@
 # Songlingo
 
-Learn languages through songs. Songlingo plays your songs with synced lyrics, which it reads straight from the MP3 file. Tap any word or phrase to translate it and save it, then practise your saved words with flashcards, multiple choice and writing drills.
+Learn languages through songs. Songlingo plays your songs with synced lyrics, which it reads straight from the MP3 file. Tap a word or phrase to see its supplied translation or add one yourself, save it, then practise your saved words with flashcards, multiple choice and writing drills.
 
 It's plain HTML, CSS and JavaScript with no build step and no backend, so it runs as-is on GitHub Pages.
 
@@ -8,7 +8,7 @@ It's plain HTML, CSS and JavaScript with no build step and no backend, so it run
 
 - **Synced lyrics from the MP3.** Songlingo reads the lyrics embedded in the file, so there are no separate lyrics files to manage. The current line is highlighted and scrolls into view as the song plays, and instrumental breaks show a small animation. Click a line's timestamp to jump to it. Lyrics are marked as not to translate, so browser translation preserves the original words.
 - **Player controls.** Play/pause, ±5 s, seek bar, speed from 0.6× to 1.25×, and loop the current line.
-- **Tap to translate.** Tap a word or phrase to see its translation. Aynalı Kemer uses built-in translations for its Turkish words and phrases, each of which is a single tap target. Other songs use Google Translate's unofficial web endpoint for individual words, and you can edit them before saving. Songs can also include a manually supplied translation displayed below the lyrics.
+- **Manual translations.** Songs can include a manually supplied translation displayed below the lyrics, and individual words or phrases can have built-in translations. Add translations for other words yourself before saving them.
 - **Saved words, grouped by song.** Each saved word keeps the lyric line it came from. Edit, search or delete words. Saved words are underlined in the lyrics.
 - **Practice modes.**
   - Flashcards: flip, then sort into "Know it" or "Still learning".
@@ -52,7 +52,7 @@ audio/                Your .mp3 files (with embedded lyrics)
 
    - `id`: a unique slug that never changes, because saved words are linked to it.
    - `language`: a two-letter code for the song's language (`fr`, `es`, `de`, `tr`, ...). This is the language that gets translated *from*. If you leave it out, the language stored with the embedded lyrics is used.
-   - `translation` (optional): path to a UTF-8 text file containing a manual translation. Each non-empty line should translate the corresponding non-empty lyric line in order; blank lines are for display formatting. The translation is displayed below the lyrics. Tapping words or phrases still looks up just the selected text using the online translation service. Set `translationLanguage` to its language code (for example, `"en"`).
+   - `translation` (optional): path to a UTF-8 text file containing a manual translation. Each non-empty line should translate the corresponding non-empty lyric line in order; blank lines are for display formatting. The translation is displayed below the lyrics. Built-in word and phrase translations can be added in `js/views/player.js`. Set `translationLanguage` to its language code (for example, `"en"`).
    - `title` and `artist` are optional. If you leave them out, they're read from the MP3's tags.
    - `cover` (an image path) is optional. Without it, the cover art inside the MP3 is used, or a generated cover if there is none.
 
@@ -95,7 +95,7 @@ All paths are relative, so the site works from a repo subfolder URL.
 - **File sizes.** GitHub blocks files over 100 MB and warns above 50 MB. A typical MP3 is 3–10 MB, which is fine.
 - **Copyright.** A public GitHub Pages site is visible to anyone. Only publish audio and lyrics you have the rights to share, or keep the repository private. Private-repo Pages needs a paid GitHub plan.
 - **Data storage.** Saved words live in each visitor's browser (`localStorage`). Clearing site data deletes them, so use Settings → Export to back them up or move them to another device.
-- **Translations.** Tap-to-translate sends selected text to Google Translate's unofficial endpoint; no API key is required, but Google may change or block it without notice. Results are cached in the browser. If unavailable, you can type your own translation or use the Google Translate, Wiktionary or WordReference links in the popup.
+- **Translations.** Translations are supplied with each song or entered manually; the app does not send selected lyrics to an online translation service.
 
 ## Keyboard shortcuts
 
