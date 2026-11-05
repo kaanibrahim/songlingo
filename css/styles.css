@@ -372,6 +372,7 @@ input[type=range] { flex: 1; accent-color: var(--accent); width: 100%; }
   .nav { order: 3; flex-basis: 100%; }
   .brand { flex: 1; }
   .lyrics { height: calc(100vh - 330px); }
+  .line.active .line-text { transform: none; }
   .line-seek { width: 2.6rem; font-size: .68rem; }
   .line.gap { padding-left: 3.4rem; }
   .controls { flex-wrap: wrap; gap: .45rem; }
