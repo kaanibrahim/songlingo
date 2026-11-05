@@ -1,6 +1,6 @@
 import { esc, loadSongs, coverHtml, withTags } from '../util.js';
 import { getWords } from '../store.js';
-import { LANGUAGES } from '../translate.js';
+import { LANGUAGES } from '../languages.js';
 
 export async function renderLibrary(root) {
   root.innerHTML = `

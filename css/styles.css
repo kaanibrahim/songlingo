@@ -263,12 +263,6 @@ input[type=range] { flex: 1; accent-color: var(--accent); width: 100%; }
 .lookup .close { position: absolute; top: .4rem; right: .4rem; }
 .lookup-src { font: 700 1.35rem var(--serif); margin: 0 2rem .3rem 0; }
 .tr-main { font-size: 1.1rem; color: var(--teal); font-weight: 600; margin: 0 0 .3rem; }
-.tr-alt { display: flex; gap: .3rem; flex-wrap: wrap; margin: 0; }
-.alt { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: .1rem .55rem; font-size: .8rem; cursor: pointer; color: var(--ink-2); }
-.alt:hover { border-color: var(--ink); }
-.lookup-links { font-size: .78rem; color: var(--muted); margin: .7rem 0 0; }
-.pulse { animation: pulse 1s ease-in-out infinite alternate; }
-@keyframes pulse { to { opacity: .4; } }
 
 /* ---------- Words ---------- */
 .word-group { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 1.5rem; overflow: hidden; }

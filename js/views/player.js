@@ -1,7 +1,7 @@
 import { $, $$, esc, toast, getSong, loadLyrics, loadTranslation, coverHtml } from '../util.js';
 import { tokenize, activeLineIndex, formatTime } from '../lrc.js';
 import { getSettings, addWord, findWord, getWords, deleteWord, onWordsChange } from '../store.js';
-import { translate, dictionaryLinks, LANGUAGES } from '../translate.js';
+import { LANGUAGES } from '../languages.js';
 
 const ICON_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="26" height="26"><rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor"/></svg>';
@@ -48,6 +48,89 @@ const AYNALI_KEMER_PHRASES = [
   translation,
 })).sort((a, b) => b.words.length - a.words.length);
 
+const DELI_OGLAN_PHRASES = [
+  ['ne tarafa dönersem döneyim', 'No matter which way I turn'],
+  ['yüzünü', 'your face'],
+  ['görüyorum', 'I see'],
+  ['hep', 'always'],
+  ['her yerde sen', 'you’re everywhere'],
+  ['sırrını bilemediğim', 'a mystery that I can’t figure out'],
+  ["bi' çekim", 'an attraction'],
+  ['var', 'there is'],
+  ['beni kıskıvrak ele geçiren', 'That has me completely in its grip'],
+  ['düşünsem', 'if I think'],
+  ['ne olur', 'what does it matter?'],
+  ['düşünmesem', 'If I don’t think'],
+  ['beni çılgına çeviren neydi', 'what was it that drove me wild?'],
+  ['dirensem', 'If I resist'],
+  ['direnmesem', 'if I don’t resist?'],
+  ['ten', 'skin'],
+  ['eşini', 'it’s match'],
+  ['seçiyor', 'chooses'],
+  ['haydi', 'come on'],
+  ['hadi', 'come on'],
+  ['deli', 'wild'],
+  ['oğlan', 'boy'],
+  ['belime dolan', 'wrap your arms around my waist'],
+  ["hele bi' öp bakalım", 'Go ahead and kiss'],
+  ['kızı', 'the girl'],
+  ['dudağından', 'on the lips'],
+  ["olur da hani bi' de", 'and if by chance'],
+  ['denk gelirse', 'it lines up'],
+  ['dudaktan', 'from the lips'],
+  ['kalbine', 'to your heart'],
+  ['düşerse', 'if it travels'],
+  ['tenle', 'with the skin'],
+  ['yanar', 'it burns'],
+  ['ruhla', 'with the soul'],
+  ['tamamlanır', 'is completed'],
+  ["hele bi'", 'especially'],
+  ['aşkla', 'with love'],
+  ['pişerse', 'if it’s tempered'],
+  ['kalp', 'heart'],
+  ['kalbi', 'the heart'],
+  ['hisseder', 'senses'],
+  ['olmaz mı', 'couldn’t it happen?'],
+  ['hepi topu', 'all in all'],
+  ['bu', 'this'],
+  ['istediğim', 'what I want'],
+  ['hayatta', 'in life'],
+  ["dene n'olur", 'give it a try'],
+  ['tutamam kendimi', 'I can’t hold myself back'],
+  ['sen çıkardın beni baştan', 'you led me astray'],
+  ['ateşe dans bu', 'this is a dance with fire'],
+  ['kaçırma şans bu', 'don’t miss this chance'],
+  ['aşk', 'love'],
+  ['tehlikeyi', 'danger'],
+  ['sever', 'loves'],
+].map(([text, translation]) => ({
+  words: text.toLocaleLowerCase('tr').split(/\s+/),
+  translation,
+})).sort((a, b) => b.words.length - a.words.length);
+
+function findPhrase(tokens, start, phrases) {
+  for (const phrase of phrases) {
+    let tokenIndex = start;
+    let matches = true;
+    for (let wordIndex = 0; wordIndex < phrase.words.length; wordIndex++) {
+      if (!tokens[tokenIndex]?.word || tokens[tokenIndex].text.toLocaleLowerCase('tr') !== phrase.words[wordIndex]) {
+        matches = false;
+        break;
+      }
+      if (wordIndex < phrase.words.length - 1) {
+        const separator = tokens[tokenIndex + 1];
+        if (!separator || separator.word || !/^\s+$/.test(separator.text)) {
+          matches = false;
+          break;
+        }
+        tokenIndex += 2;
+      }
+    }
+    if (matches) return { end: tokenIndex, translation: phrase.translation };
+  }
+  return null;
+}
+
 export async function renderPlayer(root, songId) {
   const song = await getSong(songId);
   if (!song) {
@@ -63,8 +146,8 @@ export async function renderPlayer(root, songId) {
   const translation = translationResult.text || '';
   const lines = lyrics.lines;
   const settings = getSettings();
-  const from = song.language || 'auto';
-  const to = song.translationLanguage || settings.targetLang;
+  const from = song.language || '';
+  const to = song.translationLanguage || 'en';
 
   root.innerHTML = `
     <section class="player-view">
@@ -80,7 +163,7 @@ export async function renderPlayer(root, songId) {
         </div>
       </div>
 
-      <p class="hint">Tap a word or phrase to see its translation.</p>
+      <p class="hint">Tap a word or phrase to see its translation, or add one manually.</p>
 
       <div id="notices"></div>
       <div class="lyrics notranslate" id="lyrics" translate="no"${song.language ? ` lang="${esc(song.language)}"` : ''} aria-live="off"></div>
@@ -115,7 +198,7 @@ export async function renderPlayer(root, songId) {
       <p class="lookup-src" id="lookupSrc"></p>
       <div class="lookup-tr" id="lookupTr"></div>
       <label class="field compact" id="lookupEdit" hidden>
-        <span>Your translation (edit if needed)</span>
+        <span>Add a translation</span>
         <input type="text" id="lookupInput" autocomplete="off">
       </label>
       <div class="row">
@@ -123,7 +206,6 @@ export async function renderPlayer(root, songId) {
         <button class="btn ghost" id="replayBtn" title="Replay this line">▶ Line</button>
         <button class="btn ghost danger" id="unsaveBtn" hidden>Remove</button>
       </div>
-      <p class="lookup-links" id="lookupLinks"></p>
     </div>`;
 
   const audio = $('#audio');
@@ -140,6 +222,9 @@ export async function renderPlayer(root, songId) {
         <p>You can still play the song. Lyrics are read from the MP3 file itself, and this one has none embedded. Use an MP3 with embedded synced lyrics, or set a <code>"lyrics"</code> .lrc file for this song in <code>songs/songs.json</code>.</p>
       </div>`;
   } else {
+    const phrases = song.id === 'aynali-kemer' ? AYNALI_KEMER_PHRASES
+      : song.id === 'deli-oglan' ? DELI_OGLAN_PHRASES
+        : [];
     const renderTokens = (tokens, lineIndex) => {
       let html = '';
       for (let i = 0; i < tokens.length;) {
@@ -150,31 +235,7 @@ export async function renderPlayer(root, songId) {
           continue;
         }
 
-        let match = null;
-        if (song.id === 'aynali-kemer') {
-          for (const phrase of AYNALI_KEMER_PHRASES) {
-            let tokenIndex = i;
-            let matches = true;
-            for (let wordIndex = 0; wordIndex < phrase.words.length; wordIndex++) {
-              if (!tokens[tokenIndex]?.word || tokens[tokenIndex].text.toLocaleLowerCase('tr') !== phrase.words[wordIndex]) {
-                matches = false;
-                break;
-              }
-              if (wordIndex < phrase.words.length - 1) {
-                const separator = tokens[tokenIndex + 1];
-                if (!separator || separator.word || !/^\s+$/.test(separator.text)) {
-                  matches = false;
-                  break;
-                }
-                tokenIndex += 2;
-              }
-            }
-            if (matches) {
-              match = { end: tokenIndex, translation: phrase.translation };
-              break;
-            }
-          }
-        }
+        const match = findPhrase(tokens, i, phrases);
 
         const end = match?.end ?? i;
         const text = tokens.slice(i, end + 1).map((part) => part.text).join('');
@@ -194,7 +255,7 @@ export async function renderPlayer(root, songId) {
     }).join('') + '<div class="lyrics-pad"></div>';
   }
   if (!lyrics.synced && lines.length) {
-    $('#notices').insertAdjacentHTML('beforeend', `<p class="notice">This file's lyrics have no timestamps, so they won't follow the music — but you can still tap words to translate them.</p>`);
+    $('#notices').insertAdjacentHTML('beforeend', `<p class="notice">This file's lyrics have no timestamps, so they won't follow the music — but you can still tap words to see supplied translations or add your own.</p>`);
     lyricsEl.classList.add('unsynced');
   }
 
@@ -305,11 +366,9 @@ export async function renderPlayer(root, songId) {
   let wasPlaying = false;
 
   // ---------- Lookup popup ----------
-  let lookupReq = 0;
-  async function openLookup(element) {
+  function openLookup(element) {
     const text = element.textContent.trim();
     if (!text) return;
-    const reqId = ++lookupReq;
     sel = {
       line: +element.dataset.l,
       text,
@@ -329,34 +388,15 @@ export async function renderPlayer(root, songId) {
     const trEl = $('#lookupTr');
     const input = $('#lookupInput');
     const edit = $('#lookupEdit');
-    const links = $('#lookupLinks');
     const knownTranslation = existing?.translation || sel.translation;
     if (knownTranslation) {
       edit.hidden = true;
-      links.hidden = true;
       trEl.innerHTML = `<p class="tr-main">${esc(knownTranslation)}</p>`;
       return;
     }
     edit.hidden = false;
-    links.hidden = false;
     input.value = existing?.translation || '';
-    links.innerHTML = 'More: ' + dictionaryLinks(text, from, to).map((l) => `<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join(' · ');
-    if (from === 'auto' || from === to) {
-      trEl.innerHTML = `<p class="muted">Set a <code>language</code> for this song in songs.json to get automatic translations.</p>`;
-      return;
-    }
-    trEl.innerHTML = '<p class="muted pulse">Translating…</p>';
-    try {
-      const r = await translate(text, from, to);
-      if (reqId !== lookupReq) return;
-      trEl.innerHTML = `<p class="tr-main">${esc(r.main)}</p>` +
-        (r.alternatives.length ? `<p class="tr-alt">${r.alternatives.map((a) => `<button class="alt" type="button">${esc(a)}</button>`).join('')}</p>` : '');
-      if (!existing) input.value = r.main;
-      $$('.alt', trEl).forEach((b) => b.addEventListener('click', () => { input.value = b.textContent; }));
-    } catch (err) {
-      if (reqId !== lookupReq) return;
-      trEl.innerHTML = `<p class="muted">Couldn't reach the translation service. Type your own translation below, or use one of the links.</p>`;
-    }
+    trEl.innerHTML = '<p class="muted">No translation supplied for this word. Add one below.</p>';
   }
 
   function positionLookup() {
@@ -374,7 +414,6 @@ export async function renderPlayer(root, songId) {
 
   function closeLookup() {
     lookup.hidden = true;
-    lookupReq++;
     sel?.element.classList.remove('sel');
     sel = null;
     if (wasPlaying) { wasPlaying = false; audio.play().catch(() => {}); }

@@ -6,7 +6,7 @@ const KEYS = {
   settings: 'songlingo.settings.v1',
 };
 
-const DEFAULT_SETTINGS = { targetLang: 'en', autoPause: true };
+const DEFAULT_SETTINGS = { autoPause: true };
 
 function read(key, fallback) {
   try {
