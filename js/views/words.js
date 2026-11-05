@@ -20,11 +20,11 @@ export async function renderWords(root) {
   root.innerHTML = `
     <section>
       <div class="section-head">
-        <h1>My words</h1>
         <div class="row">
+          <h1>My words</h1>
           <button type="button" class="btn ghost small" id="wordEdit" aria-pressed="false">Edit</button>
-          <input type="search" id="wordSearch" class="search" placeholder="Search words…" aria-label="Search saved words">
         </div>
+        <input type="search" id="wordSearch" class="search" placeholder="Search words…" aria-label="Search saved words">
       </div>
       <div id="wordGroups"></div>
     </section>`;
