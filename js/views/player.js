@@ -1,4 +1,4 @@
-import { $, $$, esc, toast, getSong, loadLyrics, loadTranslationOverrides, coverHtml } from '../util.js';
+import { $, $$, esc, toast, getSong, loadLyrics, coverHtml } from '../util.js';
 import { tokenize, activeLineIndex, formatTime } from '../lrc.js';
 import { getSettings, getTranslationOverrides, setTranslationOverride, addWord, findWord, getWords, updateWord, deleteWord, onWordsChange } from '../store.js';
 import { LANGUAGES } from '../languages.js';
@@ -293,13 +293,10 @@ export async function renderPlayer(root, songId) {
     root.innerHTML = `<section class="empty"><h2>Song not found</h2><p><a href="#/">Back to songs</a></p></section>`;
     return;
   }
-  const [lyrics, baseOverrides] = await Promise.all([loadLyrics(song), loadTranslationOverrides()]);
+  const lyrics = await loadLyrics(song);
   const lines = lyrics.lines;
   const settings = getSettings();
-  const phraseOverrides = {
-    ...(baseOverrides[song.id] || {}),
-    ...(getTranslationOverrides()[song.id] || {}),
-  };
+  const phraseOverrides = getTranslationOverrides()[song.id] || {};
   const from = song.language || '';
   const to = song.translationLanguage || 'en';
 

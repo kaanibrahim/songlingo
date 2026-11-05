@@ -1,5 +1,5 @@
-import { $, $$, toast, loadTranslationOverrides } from './util.js';
-import { getSettings, setSettings, getTranslationOverrides, getWords, onWordsChange, exportWords, importWords } from './store.js';
+import { $, $$, toast } from './util.js';
+import { getSettings, setSettings, getWords, onWordsChange, exportWords, importWords } from './store.js';
 import { renderLibrary } from './views/library.js';
 import { renderPlayer } from './views/player.js';
 import { renderWords } from './views/words.js';
@@ -53,7 +53,6 @@ function setupSettings() {
     const s = getSettings();
     $('#autoPause').checked = s.autoPause;
     $('#adminMode').checked = s.adminMode;
-    $('#translationExportField').hidden = !s.adminMode;
     const editor = $('#translationEditor');
     if (editor) editor.hidden = !s.adminMode;
     dlg.showModal();
@@ -62,7 +61,6 @@ function setupSettings() {
   $('#adminMode').addEventListener('change', (e) => {
     const enabled = e.target.checked;
     setSettings({ adminMode: enabled });
-    $('#translationExportField').hidden = !enabled;
     const editor = $('#translationEditor');
     if (editor) editor.hidden = !enabled;
   });
@@ -74,42 +72,6 @@ function setupSettings() {
     a.download = `songlingo-words-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
-  });
-  $('#exportTranslationsBtn').addEventListener('click', async () => {
-    let fileHandle;
-    try {
-      if (typeof window.showSaveFilePicker === 'function') {
-        fileHandle = await window.showSaveFilePicker({
-          suggestedName: 'translation-overrides.json',
-          types: [{ description: 'JSON file', accept: { 'application/json': ['.json'] } }],
-        });
-      }
-
-      const base = await loadTranslationOverrides();
-      const overrides = getTranslationOverrides();
-      const merged = { ...base };
-      for (const [songId, translations] of Object.entries(overrides)) {
-        merged[songId] = { ...(base[songId] || {}), ...translations };
-      }
-      const contents = `${JSON.stringify(merged, null, 2)}\n`;
-
-      if (fileHandle) {
-        const writable = await fileHandle.createWritable();
-        await writable.write(contents);
-        await writable.close();
-        toast('Saved translation-overrides.json');
-      } else {
-        const blob = new Blob([contents], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'translation-overrides.json';
-        a.click();
-        URL.revokeObjectURL(a.href);
-        toast('Downloaded translation-overrides.json');
-      }
-    } catch (error) {
-      if (error.name !== 'AbortError') toast(`Could not save translations: ${error.message}`);
-    }
   });
   $('#importInput').addEventListener('change', async (e) => {
     const file = e.target.files[0];
