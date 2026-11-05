@@ -7,7 +7,7 @@ const KEYS = {
   translations: 'songlingo.translations.v1',
 };
 
-const DEFAULT_SETTINGS = { autoPause: true, adminMode: false };
+const DEFAULT_SETTINGS = { autoPause: true, adminMode: false, showLineTranslations: true };
 
 function read(key, fallback) {
   try {

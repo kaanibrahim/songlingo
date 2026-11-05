@@ -1,10 +1,11 @@
-import { $, $$, esc, toast, getSong, loadLyrics, coverHtml } from '../util.js';
+import { $, $$, esc, toast, getSong, loadLyrics, loadTranslation, coverHtml } from '../util.js';
 import { tokenize, activeLineIndex, formatTime } from '../lrc.js';
-import { getSettings, getTranslationOverrides, setTranslationOverride, addWord, findWord, getWords, updateWord, deleteWord, onWordsChange } from '../store.js';
+import { getSettings, setSettings, getTranslationOverrides, setTranslationOverride, addWord, findWord, getWords, updateWord, deleteWord, onWordsChange } from '../store.js';
 import { LANGUAGES } from '../languages.js';
 
 const ICON_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="26" height="26"><rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor"/></svg>';
+const ICON_TRANSLATE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h12M9 3v2c0 4-2.5 7-6 9m2-6c1.4 2.4 3.4 4.2 6 5.2M14 20l4-10 4 10m-6.5-3h5"/></svg>';
 
 const AYNALI_KEMER_PHRASES = [
   ['sabah yeli', 'morning breeze'],
@@ -296,6 +297,14 @@ export async function renderPlayer(root, songId) {
   const lyrics = await loadLyrics(song);
   const lines = lyrics.lines;
   const settings = getSettings();
+  let translationText = '';
+  let translationLoadError = null;
+  try {
+    translationText = await loadTranslation(song);
+  } catch (error) {
+    translationLoadError = error;
+  }
+  const translationLines = translationText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   const phraseOverrides = getTranslationOverrides()[song.id] || {};
   const from = song.language || '';
   const to = song.translationLanguage || 'en';
@@ -314,7 +323,10 @@ export async function renderPlayer(root, songId) {
         </div>
       </div>
 
-      <p class="hint">Tap a word or phrase to see its supplied translation.</p>
+      <div class="lyrics-toolbar">
+        <p class="hint">Tap a word or phrase to see its supplied translation.</p>
+        ${lines.some((line) => line.text) && translationLines.length ? `<button class="icon-btn translation-toggle" id="translationToggle" type="button" aria-pressed="true">${ICON_TRANSLATE}</button>` : ''}
+      </div>
 
       <div id="notices"></div>
       <div class="lyrics notranslate" id="lyrics" translate="no"${song.language ? ` lang="${esc(song.language)}"` : ''} aria-live="off"></div>
@@ -361,6 +373,27 @@ export async function renderPlayer(root, songId) {
   const playBtn = $('#playBtn');
   const seek = $('#seek');
   const lookup = $('#lookup');
+  const translationToggle = $('#translationToggle');
+  let showLineTranslations = settings.showLineTranslations !== false;
+  const updateLineTranslationDisplay = () => {
+    lyricsEl.classList.toggle('translations-hidden', !showLineTranslations);
+    if (!translationToggle) return;
+    const label = `${showLineTranslations ? 'Hide' : 'Show'} line translations`;
+    translationToggle.setAttribute('aria-label', label);
+    translationToggle.setAttribute('title', label);
+    translationToggle.setAttribute('aria-pressed', String(showLineTranslations));
+  };
+  updateLineTranslationDisplay();
+  translationToggle?.addEventListener('click', () => {
+    showLineTranslations = !showLineTranslations;
+    setSettings({ showLineTranslations });
+    updateLineTranslationDisplay();
+  });
+
+  if (translationLoadError) {
+    console.error('Could not load line translations', translationLoadError);
+    $('#notices').insertAdjacentHTML('beforeend', `<p class="notice error">Could not load line translations: ${esc(translationLoadError.message || String(translationLoadError))}</p>`);
+  }
 
   // ---------- Render lyrics ----------
   if (!lines.length) {
@@ -397,12 +430,17 @@ export async function renderPlayer(root, songId) {
       return html;
     };
 
+    let translationIndex = 0;
     lyricsEl.innerHTML = '<div class="lyrics-pad"></div>' + lines.map((l, li) => {
       if (!l.text) return `<div class="line gap" data-l="${li}" aria-hidden="true"><span class="gap-dots"><i></i><i></i><i></i></span></div>`;
+      const lineTranslation = translationLines[translationIndex++] || '';
       const html = renderTokens(tokenize(l.text), li);
       return `<div class="line" data-l="${li}">
         <button class="line-seek" data-l="${li}" title="Play from here" aria-label="Play from ${formatTime(l.time, false)}">${formatTime(l.time, false)}</button>
-        <p class="line-text">${html}</p>
+        <div class="line-content">
+          <p class="line-text">${html}</p>
+          ${lineTranslation ? `<p class="line-translation">${esc(lineTranslation)}</p>` : ''}
+        </div>
       </div>`;
     }).join('') + '<div class="lyrics-pad"></div>';
   }
