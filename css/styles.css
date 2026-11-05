@@ -197,7 +197,7 @@ textarea { resize: vertical; font-family: var(--serif); font-size: 1rem; line-he
 .line.active .line-text { transform: scale(1.03); }
 .w {
   display: inline; appearance: none; border: 0; background: transparent; color: inherit;
-  font: inherit; cursor: pointer; user-select: none; -webkit-user-select: none;
+  font: inherit; text-align: inherit; cursor: pointer; user-select: none; -webkit-user-select: none;
   border-radius: 6px; padding: 0 .04em; transition: background .1s;
 }
 .w:hover { background: var(--paper-2); }
