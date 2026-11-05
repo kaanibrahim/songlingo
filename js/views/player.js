@@ -320,9 +320,9 @@ export async function renderPlayer(root, songId) {
       <div class="lyrics notranslate" id="lyrics" translate="no"${song.language ? ` lang="${esc(song.language)}"` : ''} aria-live="off"></div>
 
       <div class="controls" id="controls">
-        <button class="ctl" id="backBtn" title="Back 5 seconds (←)" aria-label="Back 5 seconds">−5</button>
+        <button class="ctl" id="backBtn" title="Previous lyric line" aria-label="Previous lyric line">←</button>
         <button class="play" id="playBtn" title="Play / pause (space)" aria-label="Play">${ICON_PLAY}</button>
-        <button class="ctl" id="fwdBtn" title="Forward 5 seconds (→)" aria-label="Forward 5 seconds">+5</button>
+        <button class="ctl" id="fwdBtn" title="Next lyric line" aria-label="Next lyric line">→</button>
         <div class="progress">
           <span id="curTime">0:00</span>
           <input type="range" id="seek" min="0" max="100" step="0.1" value="0" aria-label="Seek">
@@ -425,6 +425,7 @@ export async function renderPlayer(root, songId) {
 
   // ---------- Playback ----------
   let current = -1;
+  let selectedLine = -1;
   let loop = null;          // { start, end } when looping a line
   let userScrolledAt = 0;
 
@@ -456,6 +457,7 @@ export async function renderPlayer(root, songId) {
     if (idx !== current || force) {
       if (lineEls[current]) lineEls[current].classList.remove('active');
       current = idx;
+      if (idx >= 0) selectedLine = idx;
       lineEls.forEach((el, i) => el.classList.toggle('past', i < idx));
       if (lineEls[idx]) {
         lineEls[idx].classList.add('active');
@@ -471,6 +473,15 @@ export async function renderPlayer(root, songId) {
     lyricsEl.scrollTo({ top, behavior: 'smooth' });
   }
 
+  const seekLine = (dir) => {
+    let i = (lyrics.synced ? current : selectedLine) + dir;
+    while (lines[i] && !lines[i].text) i += dir;
+    if (!lines[i]) return;
+    if (loop) setLoop(false);
+    selectedLine = i;
+    seekTo(lines[i].time);
+  };
+
   let raf;
   const tick = () => { update(); raf = requestAnimationFrame(tick); };
 
@@ -483,8 +494,8 @@ export async function renderPlayer(root, songId) {
   });
 
   playBtn.addEventListener('click', togglePlay);
-  $('#backBtn').addEventListener('click', () => seekTo(audio.currentTime - 5));
-  $('#fwdBtn').addEventListener('click', () => seekTo(audio.currentTime + 5));
+  $('#backBtn').addEventListener('click', () => seekLine(-1));
+  $('#fwdBtn').addEventListener('click', () => seekLine(1));
   seek.addEventListener('input', () => { if (audio.duration) seekTo((seek.value / 100) * audio.duration); });
   $('#speed').addEventListener('change', (e) => { audio.playbackRate = parseFloat(e.target.value); });
 
@@ -508,6 +519,7 @@ export async function renderPlayer(root, songId) {
     if (!b) return;
     const l = lines[+b.dataset.l];
     if (loop) setLoop(false);
+    selectedLine = +b.dataset.l;
     seekTo(l.time);
     userScrolledAt = 0;
     if (audio.paused) togglePlay();
@@ -632,10 +644,7 @@ export async function renderPlayer(root, songId) {
     else if (e.key === 'ArrowRight') seekTo(audio.currentTime + 5);
     else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && lines.length) {
       e.preventDefault();
-      const dir = e.key === 'ArrowUp' ? -1 : 1;
-      let i = current + dir;
-      while (lines[i] && !lines[i].text) i += dir;
-      if (lines[i]) seekTo(lines[i].time);
+      seekLine(e.key === 'ArrowUp' ? -1 : 1);
     }
     else if (e.key.toLowerCase() === 'l') setLoop(!loop);
     else if (e.key === 'Escape' && !lookup.hidden) closeLookup();
