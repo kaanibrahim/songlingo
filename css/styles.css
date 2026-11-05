@@ -265,8 +265,7 @@ input[type=range] { flex: 1; accent-color: var(--accent); width: 100%; }
 .word-list li:last-child { border-bottom: 0; }
 .wl-main { display: flex; gap: .8rem; align-items: center; flex-wrap: wrap; }
 .wl-text { font: 700 1.15rem var(--serif); }
-.wl-tr { flex: 1; min-width: 160px; max-width: 320px; padding: .3rem .55rem !important; border-color: transparent !important; background: transparent !important; color: var(--teal) !important; font-weight: 500; }
-.wl-tr:hover, .wl-tr:focus { border-color: var(--line) !important; background: var(--paper) !important; }
+.wl-translation { color: var(--teal); font-weight: 500; }
 .wl-line { grid-column: 1; margin: 0; font-size: .88rem; color: var(--muted); font-family: var(--serif); font-style: italic; }
 .wl-line mark { background: var(--accent-soft); color: var(--accent-ink); font-style: normal; border-radius: 3px; padding: 0 .1em; }
 .wl-side { grid-row: 1 / span 2; grid-column: 2; display: flex; gap: .6rem; align-items: center; }

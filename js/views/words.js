@@ -1,5 +1,5 @@
-import { $, $$, esc, toast, loadSongs } from '../util.js';
-import { getWords, updateWord, deleteWord } from '../store.js';
+import { $, $$, esc, loadSongs } from '../util.js';
+import { getWords, deleteWord } from '../store.js';
 
 function masteryDots(box) {
   return `<span class="mastery" title="Mastery ${box}/5">${[1, 2, 3, 4, 5].map((i) => `<i class="${i <= box ? 'on' : ''}"></i>`).join('')}</span>`;
@@ -69,7 +69,7 @@ export async function renderWords(root) {
               <li data-id="${w.id}">
                 <div class="wl-main">
                   <strong class="wl-text">${esc(w.text)}</strong>
-                  <input class="wl-tr" value="${esc(w.translation)}" aria-label="Translation of ${esc(w.text)}">
+                  <span class="wl-translation">${esc(w.translation || w.text)}</span>
                 </div>
                 ${w.line ? `<p class="wl-line">“${highlight(w.line, w.text)}”</p>` : ''}
                 <div class="wl-side">
@@ -83,12 +83,6 @@ export async function renderWords(root) {
         </article>`;
     }).join('');
 
-    $$('.wl-tr', container).forEach((inp) => {
-      inp.addEventListener('change', () => {
-        updateWord(inp.closest('li').dataset.id, { translation: inp.value.trim() });
-        toast('Translation updated');
-      });
-    });
     $$('.del', container).forEach((b) => {
       b.addEventListener('click', () => {
         const li = b.closest('li');

@@ -310,7 +310,7 @@ export async function renderPlayer(root, songId) {
         </div>
       </div>
 
-      <p class="hint">Tap a word or phrase to see its translation, or add one manually.</p>
+      <p class="hint">Tap a word or phrase to see its supplied translation.</p>
 
       <div id="notices"></div>
       <div class="lyrics notranslate" id="lyrics" translate="no"${song.language ? ` lang="${esc(song.language)}"` : ''} aria-live="off"></div>
@@ -338,10 +338,6 @@ export async function renderPlayer(root, songId) {
       <button class="icon-btn close" id="lookupClose" aria-label="Close">×</button>
       <p class="lookup-src" id="lookupSrc"></p>
       <div class="lookup-tr" id="lookupTr"></div>
-      <label class="field compact" id="lookupEdit" hidden>
-        <span>Add a translation</span>
-        <input type="text" id="lookupInput" autocomplete="off">
-      </label>
       <div class="row">
         <button class="btn" id="saveBtn">Save word</button>
         <button class="btn ghost" id="replayBtn" title="Replay this line">▶ Line</button>
@@ -397,7 +393,7 @@ export async function renderPlayer(root, songId) {
     }).join('') + '<div class="lyrics-pad"></div>';
   }
   if (!lyrics.synced && lines.length) {
-    $('#notices').insertAdjacentHTML('beforeend', `<p class="notice">This file's lyrics have no timestamps, so they won't follow the music — but you can still tap words to see supplied translations or add your own.</p>`);
+    $('#notices').insertAdjacentHTML('beforeend', `<p class="notice">This file's lyrics have no timestamps, so they won't follow the music — but you can still tap words to see supplied translations.</p>`);
     lyricsEl.classList.add('unsynced');
   }
 
@@ -528,17 +524,8 @@ export async function renderPlayer(root, songId) {
     positionLookup();
 
     const trEl = $('#lookupTr');
-    const input = $('#lookupInput');
-    const edit = $('#lookupEdit');
     const knownTranslation = existing?.translation || sel.translation;
-    if (knownTranslation) {
-      edit.hidden = true;
-      trEl.innerHTML = `<p class="tr-main">${esc(knownTranslation)}</p>`;
-      return;
-    }
-    edit.hidden = false;
-    input.value = existing?.translation || '';
-    trEl.innerHTML = '<p class="muted">No translation supplied for this word. Add one below.</p>';
+    trEl.innerHTML = `<p class="tr-main">${esc(knownTranslation || text)}</p>`;
   }
 
   function positionLookup() {
@@ -573,8 +560,7 @@ export async function renderPlayer(root, songId) {
   $('#saveBtn').addEventListener('click', () => {
     if (!sel) return;
     const { text, line: lineIndex, translation: knownTranslation } = sel;
-    const translation = findWord(song.id, text)?.translation || knownTranslation || $('#lookupInput').value.trim() || $('#lookupTr .tr-main')?.textContent?.trim();
-    if (!translation) { toast('Translation not available'); return; }
+    const translation = findWord(song.id, text)?.translation || knownTranslation || '';
     const line = lines[lineIndex];
     const existed = !!findWord(song.id, text);
     addWord({
@@ -591,7 +577,6 @@ export async function renderPlayer(root, songId) {
     toast('Removed');
     closeLookup();
   });
-  $('#lookupInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#saveBtn').click(); });
   $('#replayBtn').addEventListener('click', () => {
     if (!sel) return;
     const l = lines[sel.line];
