@@ -217,15 +217,6 @@ textarea { resize: vertical; font-family: var(--serif); font-size: 1rem; line-he
 /* Lyrics without timestamps: show everything, no highlighting */
 .lyrics.unsynced .line { opacity: 1; }
 .lyrics.unsynced .line-seek { visibility: hidden; }
-.manual-translation {
-  margin: 1rem 0 2rem;
-  padding: 1.25rem clamp(1rem, 4vw, 2rem);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--card);
-}
-.manual-translation h2 { margin: 0 0 .8rem; font: 600 1.2rem var(--serif); }
-.manual-translation-text { white-space: pre-wrap; line-height: 1.65; }
 .notice { font-size: .88rem; padding: .6rem .9rem; border-radius: 10px; background: var(--teal-soft); color: var(--teal); margin: .5rem 0; -webkit-user-select: text; user-select: text; }
 .notice.error { background: #f8dcd7; color: var(--bad); }
 
