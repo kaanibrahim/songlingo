@@ -15,23 +15,32 @@ export async function renderWords(root) {
   let songs = [];
   try { songs = await loadSongs(); } catch {}
   const songById = Object.fromEntries(songs.map((s) => [s.id, s]));
+  let editing = false;
 
   root.innerHTML = `
     <section>
       <div class="section-head">
         <h1>My words</h1>
-        <input type="search" id="wordSearch" class="search" placeholder="Search words…" aria-label="Search saved words">
+        <div class="row">
+          <button type="button" class="btn ghost small" id="wordEdit" aria-pressed="false">Edit</button>
+          <input type="search" id="wordSearch" class="search" placeholder="Search words…" aria-label="Search saved words">
+        </div>
       </div>
       <div id="wordGroups"></div>
     </section>`;
 
   const container = $('#wordGroups');
+  const editButton = $('#wordEdit');
 
   function render() {
+    const savedWords = getWords();
     const q = $('#wordSearch').value.trim().toLowerCase();
-    const words = getWords().filter((w) => !q || w.text.toLowerCase().includes(q) || w.translation.toLowerCase().includes(q));
+    const words = savedWords.filter((w) => !q || w.text.toLowerCase().includes(q) || w.translation.toLowerCase().includes(q));
+    editButton.hidden = !savedWords.length;
+    editButton.textContent = editing ? 'Done' : 'Edit';
+    editButton.setAttribute('aria-pressed', String(editing));
 
-    if (!getWords().length) {
+    if (!savedWords.length) {
       container.innerHTML = `<div class="empty"><h3>No saved words yet</h3><p>Open a song and tap any word you don't understand to save it here.</p><a class="btn" href="#/">Browse songs</a></div>`;
       return;
     }
@@ -74,9 +83,7 @@ export async function renderWords(root) {
                 ${w.line ? `<p class="wl-line">“${highlight(w.line, w.text)}”</p>` : ''}
                 <div class="wl-side">
                   ${masteryDots(w.box)}
-                  <button class="icon-btn del" title="Delete" aria-label="Delete ${esc(w.text)}">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
-                  </button>
+                  ${editing ? `<button type="button" class="btn ghost small danger del" aria-label="Delete ${esc(w.text)}">Delete</button>` : ''}
                 </div>
               </li>`).join('')}
           </ul>
@@ -92,6 +99,10 @@ export async function renderWords(root) {
     });
   }
 
+  editButton.addEventListener('click', () => {
+    editing = !editing;
+    render();
+  });
   $('#wordSearch').addEventListener('input', render);
   render();
 }
