@@ -115,6 +115,10 @@ export function deleteWord(id) {
   saveWords(getWords().filter((w) => w.id !== id));
 }
 
+export function deleteAllWords() {
+  saveWords([]);
+}
+
 /** Record a practice answer and move the card between mastery boxes. */
 export function recordAnswer(id, isCorrect) {
   const words = getWords();
