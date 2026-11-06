@@ -6,6 +6,7 @@ import { LANGUAGES } from '../languages.js';
 const ICON_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="26" height="26"><rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor"/></svg>';
 const ICON_TRANSLATE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h12M9 3v2c0 4-2.5 7-6 9m2-6c1.4 2.4 3.4 4.2 6 5.2M14 20l4-10 4 10m-6.5-3h5"/></svg>';
+const ICON_REPEAT = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="m7 22-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>';
 
 const AYNALI_KEMER_PHRASES = [
   ['sabah yeli', 'morning breeze'],
@@ -345,6 +346,7 @@ export async function renderPlayer(root, songId) {
           <option value="0.6">0.6×</option><option value="0.75">0.75×</option><option value="0.9">0.9×</option>
           <option value="1" selected>1×</option><option value="1.25">1.25×</option>
         </select>
+        <button class="ctl toggle repeat-song" id="repeatSongBtn" type="button" title="Repeat song" aria-label="Repeat song" aria-pressed="false">${ICON_REPEAT}</button>
       </div>
 
       <audio id="audio" preload="auto" src="${esc(song.audio)}"></audio>
@@ -536,6 +538,12 @@ export async function renderPlayer(root, songId) {
   $('#fwdBtn').addEventListener('click', () => seekLine(1));
   seek.addEventListener('input', () => { if (audio.duration) seekTo((seek.value / 100) * audio.duration); });
   $('#speed').addEventListener('change', (e) => { audio.playbackRate = parseFloat(e.target.value); });
+  const repeatSongBtn = $('#repeatSongBtn');
+  repeatSongBtn.addEventListener('click', () => {
+    audio.loop = !audio.loop;
+    repeatSongBtn.setAttribute('aria-pressed', String(audio.loop));
+    repeatSongBtn.classList.toggle('on', audio.loop);
+  });
 
   const loopBtn = $('#loopBtn');
   const setLoop = (on) => {

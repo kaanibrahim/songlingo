@@ -256,6 +256,7 @@ textarea { resize: vertical; font-family: var(--serif); font-size: 1rem; line-he
   appearance: none; -webkit-appearance: none;
   padding-inline: .7rem; text-align: center; text-align-last: center;
 }
+.controls .repeat-song { display: grid; place-items: center; flex: none; width: 38px; height: 38px; padding: .4rem; }
 .controls select.ctl option { color: var(--ink); }
 .controls .ctl:hover { border-color: var(--paper); }
 .controls .ctl.on { background: var(--accent); border-color: var(--accent); }
