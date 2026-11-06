@@ -1,5 +1,5 @@
 import { $, $$, esc, loadSongs } from '../util.js';
-import { getWords, deleteWord } from '../store.js';
+import { getWords, deleteWord, deleteAllWords } from '../store.js';
 
 function masteryDots(box) {
   return `<span class="mastery" title="Mastery ${box}/5">${[1, 2, 3, 4, 5].map((i) => `<i class="${i <= box ? 'on' : ''}"></i>`).join('')}</span>`;
@@ -23,6 +23,7 @@ export async function renderWords(root) {
         <div class="row">
           <h1>My words</h1>
           <button type="button" class="btn ghost small" id="wordEdit" aria-pressed="false">Edit</button>
+          <button type="button" class="btn ghost small danger" id="wordDeleteAll" hidden>Delete all</button>
         </div>
         <input type="search" id="wordSearch" class="search" placeholder="Search words…" aria-label="Search saved words">
       </div>
@@ -31,6 +32,7 @@ export async function renderWords(root) {
 
   const container = $('#wordGroups');
   const editButton = $('#wordEdit');
+  const deleteAllButton = $('#wordDeleteAll');
 
   function render() {
     const savedWords = getWords();
@@ -39,6 +41,7 @@ export async function renderWords(root) {
     editButton.hidden = !savedWords.length;
     editButton.textContent = editing ? 'Done' : 'Edit';
     editButton.setAttribute('aria-pressed', String(editing));
+    deleteAllButton.hidden = !editing || !savedWords.length;
 
     if (!savedWords.length) {
       container.innerHTML = `<div class="empty"><h3>No saved words yet</h3><p>Open a song and tap any word you don't understand to save it here.</p><a class="btn" href="#/">Browse songs</a></div>`;
@@ -101,6 +104,12 @@ export async function renderWords(root) {
 
   editButton.addEventListener('click', () => {
     editing = !editing;
+    render();
+  });
+  deleteAllButton.addEventListener('click', () => {
+    if (!window.confirm('Delete all saved words? This cannot be undone.')) return;
+    deleteAllWords();
+    editing = false;
     render();
   });
   $('#wordSearch').addEventListener('input', render);
