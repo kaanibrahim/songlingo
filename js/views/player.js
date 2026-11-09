@@ -263,6 +263,53 @@ const BOMBABOMBA_PHRASES = [
   translation,
 })).sort((a, b) => b.words.length - a.words.length);
 
+const KIRMIZI_PHRASES = [
+  ['hatayı', 'the mistake'],
+  ['ben', 'I'],
+  ['en başında', 'at the very beginning'],
+  ['yaptım', 'I made'],
+  ['aynı', 'same'],
+  ['evi', 'the house'],
+  ['senle', 'with you'],
+  ['paylaşarak', 'by sharing'],
+  ['kendimi', 'myself'],
+  ['çok', 'very much'],
+  ["takdir edice'm", "I'll praise"],
+  ['ayrılığı', 'the breakup'],
+  ['kutlayarak', 'by celebrating'],
+  ['vedalaşırken', 'while saying goodbye'],
+  ['üzülmüş gibi', 'as if upset'],
+  ['tutma', "don't hold"],
+  ['ellerimi', 'my hands'],
+  ['acıyarak', 'out of pity'],
+  ['kendine', 'at yourself'],
+  ['dev aynasında', 'in a flattering mirror'],
+  ['değil', 'not'],
+  ['boy aynasında', 'in a full-length mirror'],
+  ["bi' bak", 'take a look'],
+  ['bi’ bak', 'take a look'],
+  ['bir bak', 'take a look'],
+  ['acım', 'my pain'],
+  ['taze', 'fresh'],
+  ['kurtulamazsın', "you can't escape"],
+  ['gözlerini kaçırarak', 'by avoiding my eyes'],
+  ['belki', 'maybe'],
+  ['birazcık', 'a little bit'],
+  ['bozuldun', 'you got upset'],
+  ['ruhun', 'your soul'],
+  ['can çekişiyor', 'is dying'],
+  ['biraz', 'a little'],
+  ['da', 'also'],
+  ['kızardın', 'you blushed'],
+  ['ama', 'but'],
+  ['sana', 'on you'],
+  ['kırmızı', 'red'],
+  ['yakışıyor', 'suits'],
+].map(([text, translation]) => ({
+  words: text.toLocaleLowerCase('tr').split(/\s+/),
+  translation,
+})).sort((a, b) => b.words.length - a.words.length);
+
 function findPhrase(tokens, start, phrases, overrides) {
   for (const phrase of phrases) {
     let tokenIndex = start;
@@ -408,7 +455,8 @@ export async function renderPlayer(root, songId) {
     const phrases = song.id === 'aynali-kemer' ? AYNALI_KEMER_PHRASES
       : song.id === 'deli-oglan' ? DELI_OGLAN_PHRASES
         : song.id === 'bombabomba' ? BOMBABOMBA_PHRASES
-          : [];
+          : song.id === 'kirmizi' ? KIRMIZI_PHRASES
+            : [];
     const renderTokens = (tokens, lineIndex) => {
       let html = '';
       for (let i = 0; i < tokens.length;) {
