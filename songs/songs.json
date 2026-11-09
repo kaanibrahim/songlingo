@@ -18,6 +18,13 @@
     "translationLanguage": "en"
   },
   {
+    "id": "kirmizi",
+    "title": "Kırmızı",
+    "artist": "Hande Yener",
+    "language": "tr",
+    "audio": "audio/kirmizi.mp3"
+  },
+  {
     "id": "bombabomba",
     "title": "Bombabomba.com",
     "artist": "İsmail YK",
